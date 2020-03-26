@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import fsolve
+import matplotlib.ticker as ticker
 
 class Physical_quantities:
     def __init__(self):
@@ -87,17 +88,32 @@ class Graph_draw(Input_param_Germanium):
                 ln_n_list.append(np.log(self.n_2_3(temperature)))
 
         fig, axes = plt.subplots()
-        axes.plot(temp_list, ln_n_list, color='CadetBlue', linewidth=2)
+
+        axes.plot(temp_list, ln_n_list, color='b', label='ln(p)', linewidth=1.5)
         axes.set(ylim=(37.5, 43))
         axes.set(xlim=(0, 0.025))
+
+        plt.title('Температурная зависимость концентрации носителей заряда')
+        plt.xlabel('1/T, 1/K')
+        plt.ylabel('Ln(p)')
+        plt.legend(loc=5)
+
+        axes.xaxis.set_major_locator(ticker.MultipleLocator(0.005))
+        axes.xaxis.set_minor_locator(ticker.MultipleLocator(0.001))
+        axes.yaxis.set_major_locator(ticker.MultipleLocator(1))
+        axes.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
+
+        axes.grid(which='major', color = '#666666')
+        axes.minorticks_on()
+        axes.grid(which='minor', color = 'gray', linestyle = ':')
+
         plt.show()
+
+    def draw_graph_fermi(self):
+        pass
 
 def main():
     Ge = Graph_draw()
-    #print(Ge.n_2_3(900))
-    #print(Ge.find_temp_point())
-    #print(Ge.find_low_temperature())
-    #print(Ge.find_high_temperature())
     Ge.draw_graph_n_t()
 
 if __name__ == "__main__":
