@@ -7,7 +7,9 @@ class Physical_quantities:
     def __init__(self):
         self.q = 1.6e-19 # заряд в СИ
         self.k = 8.617e-5 # постоянная Больцмана в эВ
-        self.h = 4.135e-15
+        self.h = 4.135e-15 
+        self.m = 9.1e-31 # масса электрона в СИ
+        self.k_si = 1.38e-23 # постоянная Больцмана в СИ
 
 class Сalculation_param_semicondactor:
     def find_N_c(self, temperature):
@@ -75,14 +77,40 @@ class Сalculation_param_semicondactor:
         return self.mu_p * (temperature / 300) ** -1.5
 
     def find_mu_ion(self, temperature):
-        return ((3.68e20 / self.N_a) * (self.epsilond / 16) ** 2) * ((temperature / 300) ** 1.5) * \
+        return ((3.68e20 / self.N_a) * (self.epsilond / 16) ** 2) * ((temperature / 100) ** 1.5) * \
             ((self.m_dp ** 0.5) * np.log10(1 + self.find_beta(temperature) ** 2)) ** -1
 
     def find_mu(self, temperature):
-        #return (1 / self.find_mu_tepl(temperature) + 1 / self.find_mu_ion(temperature)) ** (-1)
-        return self.find_mu_tepl(temperature) * self.find_mu_ion(temperature)\
-            / (self.find_mu_tepl(temperature) + self.find_mu_ion(temperature))
+        return (1 / self.find_mu_tepl(temperature) + 1 / self.find_mu_ion(temperature)) ** (-1)
 
+    def find_n_critical(self, temperature):
+        def find_V(temperature):
+            return np.sqrt(3 * temperature * self.k_si / self.m_dp / self.m)
+
+        def find_t(temperature):
+            return self.find_mu(temperature) * 1e-4 * self.m_dp * self.m / self.q
+
+        def find_l(temperature):
+            return find_t(temperature) * find_V(temperature)
+
+        return (np.pi * find_l(temperature) / 4) ** -3
+
+    def find_Hall_ratio(self, temperature):
+        if self.N_a * 1e6 > self.find_n_critical(temperature):
+            return 1.93 / self.q / (self.N_a * 1e6)
+        else:
+            return 1.18 / self.q / (self.N_a * 1e6)
+
+    def find_x(self, temperature):
+        return self.xl_300 + 4 * self.k_si ** 2 * temperature / self.q * self.N_a * 1e6 \
+            * self.find_mu(temperature) * 1e-4
+
+    def find_termo_eds(self, temperature):
+        return self.k_si / self.q * (5 / 2 + 3 / 2 + np.log(self.N_v_300 / self.N_a))
+
+    def find_effect_ettingauzena(self, temperature):
+        return 1 / 2 * self.k_si / self.q * temperature * self.q * self.N_a * 1e6 * \
+            self.find_mu(300) * 1e-4 * self.find_termo_eds(temperature) / self.find_x(temperature)
 
 class Input_param_Germanium(Сalculation_param_semicondactor, Physical_quantities):
     def __init__(self):
@@ -95,6 +123,8 @@ class Input_param_Germanium(Сalculation_param_semicondactor, Physical_quantitie
         self.epsilond = 16.3
         self.E_a = 0.0108
         self.N_a = 6e16
+        self.N_v_300 = 6e18
+        self.xl_300 = 60.2
 
 class Graph_draw(Input_param_Germanium):
     def __init__(self):
@@ -115,14 +145,14 @@ class Graph_draw(Input_param_Germanium):
 
         axes.plot(temp_list, ln_n_list, color='b', label='ln(p)', linewidth=1.5)
         axes.set(ylim=(37.5, 43))
-        axes.set(xlim=(0, 0.025))
+        axes.set(xlim=(0, 0.024))
 
         plt.title('Температурная зависимость концентрации носителей заряда')
         plt.xlabel('1/T, 1/K')
         plt.ylabel('Ln(p)')
         plt.legend(loc=5)
 
-        axes.xaxis.set_major_locator(ticker.MultipleLocator(0.005))
+        axes.xaxis.set_major_locator(ticker.MultipleLocator(0.004))
         axes.xaxis.set_minor_locator(ticker.MultipleLocator(0.001))
         axes.yaxis.set_major_locator(ticker.MultipleLocator(1))
         axes.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
@@ -192,14 +222,12 @@ class Graph_draw(Input_param_Germanium):
         plt.title('Температурная зависимость подвижности носителей заряда')
         plt.xlabel('T, K')
         plt.ylabel('µ, См^2/(В*с)')
-        axes.set(ylim=(0, 1600))
+        axes.set(ylim=(0, 3600))
         axes.set(xlim=(0, 1000))
         plt.legend(loc=5)
 
-        axes.xaxis.set_major_locator(ticker.MultipleLocator(200))
-        axes.xaxis.set_minor_locator(ticker.MultipleLocator(20))
-        axes.yaxis.set_major_locator(ticker.MultipleLocator(400))
-        axes.yaxis.set_minor_locator(ticker.MultipleLocator(40))
+        axes.xaxis.set_major_locator(ticker.MultipleLocator(150))
+        axes.yaxis.set_major_locator(ticker.MultipleLocator(600))
 
         axes.grid(which='major', color = '#666666')
         axes.minorticks_on()
@@ -223,14 +251,14 @@ class Graph_draw(Input_param_Germanium):
 
         axes.plot(temp_list, conduct_list, color='b', label='Ln(σ(T))', linewidth=1.5)
         axes.set(ylim=(1, 5.5))
-        axes.set(xlim=(0, 0.015))
+        axes.set(xlim=(0, 0.02))
 
         plt.title('Температурная зависимость электропроводности')
         plt.xlabel('1/T, 1/K')
         plt.ylabel('Ln(σ)')
         plt.legend(loc=5)
 
-        axes.xaxis.set_major_locator(ticker.MultipleLocator(0.0025))
+        axes.xaxis.set_major_locator(ticker.MultipleLocator(0.003))
         axes.xaxis.set_minor_locator(ticker.MultipleLocator(0.0005))
         axes.yaxis.set_major_locator(ticker.MultipleLocator(1))
         axes.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
@@ -240,9 +268,16 @@ class Graph_draw(Input_param_Germanium):
         axes.grid(which='minor', color = 'gray', linestyle = ':')
 
         plt.show()
-        
+
 def main():
     Ge = Graph_draw()
+    print('↓↓↓ Расчет параметров полупроводника ↓↓↓')
+    print(f'1) Подвижность дырок при температуре 300К => {Ge.find_mu(300)} См^2/(B*c)')
+    print(f'2) Удельная электропроводность при температуре 300К => {Ge.q * Ge.N_a * Ge.find_mu(300)} Ом * см')
+    print(f'3) Коэффициент Холла при температуре 300К ==> {Ge.find_Hall_ratio(300)} м^3/Кл')
+    print(f'4) Удельная теплопрводность при температуре 300К ==> {Ge.find_x(300)} Вт/(м*К)')
+    print(f'5) Дифференциальная термо-эдс при температуре 300К ==> {Ge.find_termo_eds(300)} В/К')
+    print(f'6) Эффект Эттинсгаузена при температуре 300К ==> {Ge.find_effect_ettingauzena(300)}')
     Ge.draw_graph_n_t()
     Ge.draw_graph_fermi()
     Ge.draw_graph_mu()
