@@ -127,57 +127,20 @@ class Input_param_Germanium(Сalculation_param_semicondactor, Physical_quantitie
         self.N_v_300 = 6e18
         self.xl_300 = 60.2
 
-class Graph_draw_and_create_table(Input_param_Germanium):
+class Draw_graph(Input_param_Germanium):
     def __init__(self):
         Input_param_Germanium.__init__(self)
-        self.data_dict = {}
-
-    def writer_table(self, data_dict):
-        with open ('data_file.csv', 'w', encoding='utf8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(('T', '1/T', 'Eg', 'ni', 'p', 'lnp', 'Ei+F(T)', 'Ei+Fi(T)',\
-                'mu', 'sigma', 'ln(sigma)'))
-            for i in range(len(self.data_dict['T'])):
-                writer.writerow((self.data_dict['T'][i], self.data_dict['1/T'][i], \
-                    self.data_dict['Eg'][i], self.data_dict['ni'][i],self.data_dict['p'][i], \
-                    self.data_dict['lnp'][i], self.data_dict['Ei+F(T)'][i], \
-                    self.data_dict['Ei+Fi(T)'][i], self.data_dict['mu'][i], \
-                    self.data_dict['sigma'][i], self.data_dict['ln(sigma)'][i]))
-
+        
     def draw_graph_n_t(self):
-        # для графика
         temp_list = list()
         ln_n_list = list()
 
-        # для таблиц
-        table_n_list = list()
-        table_temp_list = list()
-        table_ln_n_list = list()
-        table_rev_temp_list = list()
-
         for temperature in range (1, 1001):
-            # для графика
             temp_list.append(1/temperature)
             if temperature <= self.find_temp_point():
                 ln_n_list.append(np.log(self.n_1_2(temperature)) + 0.0191)
             else:
                 ln_n_list.append(np.log(self.n_2_3(temperature)))
-
-            # для таблиц
-            if temperature % 5 == 0:
-                table_temp_list.append(temperature)
-                table_rev_temp_list.append(1/temperature)
-                if temperature <= self.find_temp_point():
-                    table_n_list.append(self.n_1_2(temperature))
-                    table_ln_n_list.append(np.log(self.n_1_2(temperature)))
-                else:
-                    table_n_list.append(self.n_2_3(temperature))
-                    table_ln_n_list.append(np.log(self.n_2_3(temperature)))
-            
-        self.data_dict['T'] = table_temp_list
-        self.data_dict['1/T'] = table_rev_temp_list
-        self.data_dict['p'] = table_n_list
-        self.data_dict['lnp'] = table_ln_n_list
 
         fig, axes = plt.subplots()
 
@@ -202,7 +165,6 @@ class Graph_draw_and_create_table(Input_param_Germanium):
         plt.show()
 
     def draw_graph_fermi(self):
-        # для графика
         temp_list = list()
         E_c_list = list()
         E_v_list = list()
@@ -210,12 +172,7 @@ class Graph_draw_and_create_table(Input_param_Germanium):
         F_list = list()
         Fi_list = list()
 
-        # для таблиц
-        table_F_list = list()
-        table_Fi_list = list()
-
         for temperature in range(1, 1001):
-            # для графика
             temp_list.append(temperature)
             E_c_list.append(self.find_E_g(temperature) / 2)
             E_v_list.append(-self.find_E_g(temperature) / 2)
@@ -225,17 +182,6 @@ class Graph_draw_and_create_table(Input_param_Germanium):
                 F_list.append(self.find_low_fermi(temperature))
             else:
                 F_list.append(self.find_high_fermi(temperature))
-
-            # для таблиц
-            if temperature % 5 == 0:
-                table_Fi_list.append(self.find_fermi_i(temperature))
-                if temperature <= self.find_low_temperature():
-                    table_F_list.append(self.find_low_fermi(temperature))
-                else:
-                    table_F_list.append(self.find_high_fermi(temperature)) 
-        
-        self.data_dict['Ei+F(T)'] = table_F_list
-        self.data_dict['Ei+Fi(T)'] = table_Fi_list
 
         fig, axes = plt.subplots()
 
@@ -264,23 +210,12 @@ class Graph_draw_and_create_table(Input_param_Germanium):
         plt.show()
 
     def draw_graph_mu(self):
-        # для графика
         temp_list = list()
         mu_list = list()
 
-        # для таблиц
-        table_mu_list = list()
-
         for temperature in range (1, 1001):
-            # для графика
             temp_list.append(temperature)
             mu_list.append(self.find_mu(temperature))
-
-            # для таблиц
-            if temperature % 5 ==0:
-                table_mu_list.append(self.find_mu(temperature))
-
-        self.data_dict['mu'] = table_mu_list
 
         fig, axes = plt.subplots()
         axes.plot(temp_list, mu_list, color='g', linestyle='solid', label='µ(T)', linewidth=1.5)
@@ -302,37 +237,16 @@ class Graph_draw_and_create_table(Input_param_Germanium):
         plt.show()
 
     def draw_graph_conductivity(self):
-        # для графика
         temp_list = list()
         conduct_list = list()
-        # для таблиц
-        table_sigma_list = list()
-        table_ln_sigma_list = list()
 
         for temperature in range(1, 1001):
-            # для графика
             temp_list.append(1 / temperature)
             if temperature <= self.find_temp_point():
                 conduct_list.append(np.log(self.n_1_2(temperature) * self.find_mu(temperature) * self.q))
             else:
                 conduct_list.append(np.log(self.n_2_3(temperature) * self.find_mu(temperature) * self.q)\
                     - 0.0164)
-
-            # для таблиц
-            if temperature % 5 == 0:
-                if temperature <= self.find_temp_point():
-                    table_sigma_list.append(self.n_1_2(temperature) * \
-                        self.find_mu(temperature) * self.q)
-                    table_ln_sigma_list.append(np.log(self.n_1_2(temperature) * \
-                        self.find_mu(temperature) * self.q))
-                else:
-                    table_sigma_list.append(self.n_2_3(temperature) * \
-                        self.find_mu(temperature) * self.q)
-                    table_ln_sigma_list.append(np.log(self.n_2_3(temperature) * \
-                        self.find_mu(temperature) * self.q))
-
-        self.data_dict['sigma'] = table_sigma_list
-        self.data_dict['ln(sigma)'] = table_ln_sigma_list
 
         fig, axes = plt.subplots()
 
@@ -356,7 +270,90 @@ class Graph_draw_and_create_table(Input_param_Germanium):
 
         plt.show()
 
-    def table_ni_and_Eg(self):
+class Create_table(Input_param_Germanium):
+    def __init__(self):
+        Input_param_Germanium.__init__(self)
+        self.data_dict = {}
+    
+    def writer_table(self, data_dict):
+        with open ('data_filik.csv', 'w', encoding='utf8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(('T', '1/T', 'Eg', 'ni', 'p', 'lnp', 'Ei+F(T)', 'Ei+Fi(T)',\
+                'mu', 'sigma', 'ln(sigma)'))
+            for i in range(len(self.data_dict['T'])):
+                writer.writerow((self.data_dict['T'][i], self.data_dict['1/T'][i], \
+                    self.data_dict['Eg'][i], self.data_dict['ni'][i],self.data_dict['p'][i], \
+                    self.data_dict['lnp'][i], self.data_dict['Ei+F(T)'][i], \
+                    self.data_dict['Ei+Fi(T)'][i], self.data_dict['mu'][i], \
+                    self.data_dict['sigma'][i], self.data_dict['ln(sigma)'][i]))
+
+    def table_for_lnp(self):
+        table_n_list = list()
+        table_temp_list = list()
+        table_ln_n_list = list()
+        table_rev_temp_list = list()
+
+        for temperature in range (1, 1001):
+            if temperature % 5 == 0:
+                table_temp_list.append(temperature)
+                table_rev_temp_list.append(1/temperature)
+                if temperature <= self.find_temp_point():
+                    table_n_list.append(self.n_1_2(temperature))
+                    table_ln_n_list.append(np.log(self.n_1_2(temperature)))
+                else:
+                    table_n_list.append(self.n_2_3(temperature))
+                    table_ln_n_list.append(np.log(self.n_2_3(temperature)))
+
+        self.data_dict['T'] = table_temp_list
+        self.data_dict['1/T'] = table_rev_temp_list
+        self.data_dict['p'] = table_n_list
+        self.data_dict['lnp'] = table_ln_n_list
+
+    def table_for_fermi(self):
+        table_F_list = list()
+        table_Fi_list = list()
+
+        for temperature in range(1, 1001):
+            if temperature % 5 == 0:
+                table_Fi_list.append(self.find_fermi_i(temperature))
+                if temperature <= self.find_low_temperature():
+                    table_F_list.append(self.find_low_fermi(temperature))
+                else:
+                    table_F_list.append(self.find_high_fermi(temperature)) 
+        
+        self.data_dict['Ei+F(T)'] = table_F_list
+        self.data_dict['Ei+Fi(T)'] = table_Fi_list
+
+    def table_for_mu(self):
+        table_mu_list = list()
+
+        for temperature in range (1, 1001):
+            if temperature % 5 ==0:
+                table_mu_list.append(self.find_mu(temperature))
+
+        self.data_dict['mu'] = table_mu_list
+
+    def table_for_conductivity(self):
+        table_sigma_list = list()
+        table_ln_sigma_list = list()
+
+        for temperature in range(1, 1001):
+            if temperature % 5 == 0:
+                if temperature <= self.find_temp_point():
+                    table_sigma_list.append(self.n_1_2(temperature) * \
+                        self.find_mu(temperature) * self.q)
+                    table_ln_sigma_list.append(np.log(self.n_1_2(temperature) * \
+                        self.find_mu(temperature) * self.q))
+                else:
+                    table_sigma_list.append(self.n_2_3(temperature) * \
+                        self.find_mu(temperature) * self.q)
+                    table_ln_sigma_list.append(np.log(self.n_2_3(temperature) * \
+                        self.find_mu(temperature) * self.q))
+
+        self.data_dict['sigma'] = table_sigma_list
+        self.data_dict['ln(sigma)'] = table_ln_sigma_list
+
+    def table_for_ni_and_Eg(self):
         table_ni_list = list()
         table_Eg_list = list()
 
@@ -367,9 +364,19 @@ class Graph_draw_and_create_table(Input_param_Germanium):
 
         self.data_dict['Eg'] = table_Eg_list
         self.data_dict['ni'] = table_ni_list    
-    
+
+    def create_all_tables(self):
+        self.table_for_lnp()
+        self.table_for_fermi()
+        self.table_for_mu()
+        self.table_for_conductivity()
+        self.table_for_ni_and_Eg()
+        self.writer_table(self.data_dict)
+
 def main():
-    Ge = Graph_draw_and_create_table()
+    Ge = Draw_graph()
+    Ge_table = Create_table()
+    
     print('↓↓↓ Расчет параметров полупроводника ↓↓↓')
     print(f'1) Подвижность дырок при температуре 300К => {Ge.find_mu(300)} См^2/(B*c)')
     print(f'2) Удельная электропроводность при температуре 300К => {Ge.q * Ge.N_a * Ge.find_mu(300)} Ом * см')
@@ -377,12 +384,13 @@ def main():
     print(f'4) Удельная теплопрводность при температуре 300К ==> {Ge.find_x(300)} Вт/(м*К)')
     print(f'5) Дифференциальная термо-эдс при температуре 300К ==> {Ge.find_termo_eds(300)} В/К')
     print(f'6) Эффект Эттинсгаузена при температуре 300К ==> {Ge.find_effect_ettingauzena(300)}')
+
     Ge.draw_graph_n_t()
     Ge.draw_graph_fermi()
     Ge.draw_graph_mu()
     Ge.draw_graph_conductivity()
-    Ge.table_ni_and_Eg()
-    Ge.writer_table(Ge.data_dict)
+
+    Ge_table.create_all_tables()
 
 if __name__ == "__main__":
     main()
